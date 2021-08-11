@@ -1,0 +1,1 @@
+# insights-api-sample-console-app
