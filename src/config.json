@@ -1,0 +1,14 @@
+{
+    "contextId": "",
+    "iModelId": "",
+    "reportName": "SampleReport",
+    "mappingName": "SampleMapping",
+    "groupName": "SampleGroup",
+    "groupPropertyName": "SampleGroupProperty",
+    "authorization": {
+        "clientId": "",
+        "issuerUrl": "https://ims.bentley.com",
+        "redirectUri": "http://localhost:3000/signin-callback",
+        "scope": "openid insights:read insights:modify"
+    }
+}

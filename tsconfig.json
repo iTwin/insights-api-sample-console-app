@@ -1,0 +1,16 @@
+{
+  "extends": "./node_modules/@bentley/build-tools/tsconfig-base.json",
+  "compilerOptions": {
+    "outDir": "./lib",
+    "resolveJsonModule": true
+  },
+  "include": [
+    "./src/**/*.ts",
+    "src/tests/**/*.ts",
+    "src/config.json"
+  ],
+  "exclude": [
+    "lib",
+    "node_modules"
+  ],
+}
