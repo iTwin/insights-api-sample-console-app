@@ -58,7 +58,7 @@ export abstract class ClientBase<TEntity, TCreateParams, TUpdateParams> {
     return this.parseSingleEntityBody(resp.body);
   }
 
-  protected async create(requestContext: AuthorizedClientRequestContext, urlFactory: () => string, body: TCreateParams): Promise<TEntity> {
+  protected async post(requestContext: AuthorizedClientRequestContext, urlFactory: () => string, body: TCreateParams): Promise<TEntity> {
     requestContext.enter();
     const url = urlFactory();
     const options = this.createRequestOptions(requestContext, "POST", body);

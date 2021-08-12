@@ -45,7 +45,7 @@ export class MappingsClient extends ClientBase<Mapping, MappingCreateParams, Map
   }
 
   public async createMapping(requestContext: AuthorizedClientRequestContext, body: MappingCreateParams): Promise<Mapping> {
-    return this.create(requestContext, () => this.getUrl(), body);
+    return this.post(requestContext, () => this.getUrl(), body);
   }
 
   public async deleteMapping(requestContext: AuthorizedClientRequestContext, mappingId: string): Promise<void> {

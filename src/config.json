@@ -1,14 +1,26 @@
 {
-    "contextId": "",
+    "projectId": "",
     "iModelId": "",
     "reportName": "SampleReport",
     "mappingName": "SampleMapping",
     "groupName": "SampleGroup",
-    "groupPropertyName": "SampleGroupProperty",
+    "groupCreateQuery": "SELECT * FROM bis.physicalelement",
+    "groupProperty": {
+        "displayName": "SampleGroupProperty",
+        "dataType": "Number",
+        "quantityType": "Undefined",
+        "ecProperties": [{
+            "ecSchemaName": "BuildingTemplate_NM",
+            "ecClassName": "Concrete__x0020__Beam",
+            "ecPropertyName": "Yaw",
+            "ecPropertyType": "Number"
+          }]
+    },
     "authorization": {
         "clientId": "",
         "issuerUrl": "https://ims.bentley.com",
         "redirectUri": "http://localhost:3000/signin-callback",
         "scope": "openid insights:read insights:modify"
-    }
+    },
+    "timeoutMS": 600000
 }

@@ -3,7 +3,7 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-import { assert, BentleyError } from "@bentley/bentleyjs-core";
+import { assert, BentleyError, AuthStatus } from "@bentley/bentleyjs-core";
 import { ElectronAuthorizationBackend } from "@bentley/electron-manager/lib/ElectronBackend";
 import { IModelHost, NativeHost } from "@bentley/imodeljs-backend";
 import { NativeAppAuthorizationConfiguration } from "@bentley/imodeljs-common";
@@ -15,14 +15,14 @@ import { Report, ReportsClient } from "./ReportsClient";
 import { ExtractionClient, Run, Status } from './ExtractionClient';
 import { ReportMapping, ReportMappingsClient } from "./ReportMappingsClient";
 
-let config = require('./config.json');
+const config = require('./config.json');
 
-const contextId = config.contextId;
-const iModelId = config.iModelId;
-const reportName = config.reportName;
-const mappingName = config.mappingName;
-const groupName = config.groupName;
-const groupPropertyName = config.groupPropertyName;
+const sampleProjectId = config.projectId;
+const sampleIModelId = config.iModelId;
+const sampleReportName = config.reportName;
+const sampleMappingName = config.mappingName;
+const sampleGroupName = config.groupName;
+const sampleGroupProperty = config.groupProperty;
 
 async function signIn(): Promise<AccessToken> {
   const authConfig: NativeAppAuthorizationConfiguration = {
@@ -37,10 +37,10 @@ async function signIn(): Promise<AccessToken> {
 
   return new Promise<AccessToken>((resolve, reject) => {
     NativeHost.onUserStateChanged.addListener((token) => {
-      if (token !== undefined) {
+      if (token) {
         resolve(token);
       } else {
-        reject(new Error("Failed to sign in"));
+        reject(new BentleyError(AuthStatus.Error, "Failed to sign in"));
       }
     });
     client.signIn().catch((err) => reject(err));
@@ -49,65 +49,83 @@ async function signIn(): Promise<AccessToken> {
 
 async function getOrCreateReport(requestContext: AuthorizedClientRequestContext): Promise<Report> {
   const reportsClient = new ReportsClient();
-  const reports = await reportsClient.getReports(requestContext, contextId);
-  const report = reports.find((r) => r.displayName === reportName && !r.deleted);
-  if (report) return report;
-  return reportsClient.createReport(requestContext, { displayName: reportName, projectId: contextId });
+  const reports = await reportsClient.getReports(requestContext, sampleProjectId);
+  const report = reports.find((r) => r.displayName === sampleReportName && !r.deleted);
+  if (report)
+    return report;
+  return reportsClient.createReport(requestContext, { displayName: sampleReportName, projectId: sampleProjectId });
 }
 
 async function getOrCreateMapping(requestContext: AuthorizedClientRequestContext): Promise<Mapping> {
-  const mappingsClient = new MappingsClient(iModelId);
+  const mappingsClient = new MappingsClient(sampleIModelId);
   const mappings = await mappingsClient.getMappings(requestContext);
-  const mapping = mappings.find((m) => m.displayName === mappingName);
-  if (mapping) return mapping;
-  return mappingsClient.createMapping(requestContext, { displayName: mappingName });
+  const mapping = mappings.find((m) => m.displayName === sampleMappingName);
+  if (mapping)
+    return mapping;
+  return mappingsClient.createMapping(requestContext, { displayName: sampleMappingName });
 }
 
 async function getOrCreateReportMapping(requestContext: AuthorizedClientRequestContext, reportId: string, mappingId: string): Promise<ReportMapping> {
   const reportMappingsClient = new ReportMappingsClient(reportId);
   const reportMappings = await reportMappingsClient.getReportMappings(requestContext);
   const reportMapping = reportMappings.find((r) => r.mappingId === mappingId);
-  if (reportMapping) return reportMapping;
+  if (reportMapping)
+    return reportMapping;
   return reportMappingsClient.createReportMapping(requestContext, { mappingId });
 }
 
 async function getOrCreateGroup(requestContext: AuthorizedClientRequestContext, mappingId: string): Promise<Group> {
-  const groupsClient = new GroupsClient(iModelId, mappingId);
+  const groupsClient = new GroupsClient(sampleIModelId, mappingId);
   const groups = await groupsClient.getGroups(requestContext);
-  const group = groups.find((g) => g.displayName === groupName);
-  if (group) return group;
-  return groupsClient.createGroup(requestContext, { displayName: groupName, query: "sample query" });
+  const group = groups.find((g) => g.displayName === sampleGroupName);
+  if (group)
+    return group;
+  return groupsClient.createGroup(requestContext, { displayName: sampleGroupName, query: config.groupCreateQuery });
 }
 
 async function getOrCreateGroupProperty(requestContext: AuthorizedClientRequestContext, mappingId: string, groupId: string): Promise<GroupProperty> {
-  const groupPropertiesClient = new GroupPropertiesClient(iModelId, mappingId, groupId);
+  const groupPropertiesClient = new GroupPropertiesClient(sampleIModelId, mappingId, groupId);
   const groupProperties = await groupPropertiesClient.getGroupProperties(requestContext);
-  const groupProperty = groupProperties.find((g) => g.displayName === groupPropertyName);
-  if (groupProperty) return groupProperty;
+  const groupProperty = groupProperties.find((g) => g.displayName === sampleGroupProperty.displayName);
+  if (groupProperty)
+    return groupProperty;
   return groupPropertiesClient.createGroupProperty(
     requestContext,
-    {
-      displayName: groupPropertyName,
-      dataType: "String",
-      quantityType: "Undefined",
-      ecProperties: [{
-        ecSchemaName: "string",
-        ecClassName: "string",
-        ecPropertyName: "string",
-        ecPropertyType: "String"
-      }]});
+    sampleGroupProperty
+  );
 }
 
 async function runExtractor(requestContext: AuthorizedClientRequestContext): Promise<Run> {
-  const extractionClient = new ExtractionClient(iModelId);
-  const extraction = await extractionClient.runExtraction(requestContext);
-  return extraction;
+  const extractionClient = new ExtractionClient(sampleIModelId);
+  const extractionRun = await extractionClient.runExtraction(requestContext);
+  return extractionRun;
 }
 
 async function pingExtractor(requestContext: AuthorizedClientRequestContext, jobId: string): Promise<Status> {
-  const extractionClient = new ExtractionClient(iModelId);
-  const status = await extractionClient.getExtractionStatus(requestContext, jobId);
-  return status;
+  const extractionClient = new ExtractionClient(sampleIModelId);
+  const extractionStatus = await extractionClient.getExtractionStatus(requestContext, jobId);
+  return extractionStatus;
+}
+
+async function waitForExtractionToFinish(requestContext: AuthorizedClientRequestContext, extractionId: string): Promise<Status> {
+  let extractionStatus: Status = {
+    state: "Running",
+    reason: ""
+  };
+  let startTime = new Date().getTime()
+
+  // Wait for extraction to finish
+  try {
+    while(extractionStatus.state == "Running" && new Date().getTime() - startTime < config.timeoutMS) {
+      extractionStatus = await pingExtractor(requestContext, extractionId);
+      console.log(`Retrieve extraction status: ${extractionStatus.state} - ${extractionStatus.reason} after ${new Date().getTime() - startTime} ms.`);
+
+      await new Promise(f => setTimeout(f, 10000));
+    }
+  } catch (err)  {
+    console.error(`${err.message}\n${err.stack}`);
+  }
+  return extractionStatus;
 }
 
 async function executeBasicWorkflow(requestContext: AuthorizedClientRequestContext): Promise<void> {
@@ -137,22 +155,28 @@ async function executeBasicWorkflow(requestContext: AuthorizedClientRequestConte
     const group = await getOrCreateGroup(requestContext, mapping.id);
     console.log(`Get or Created group: ${group.displayName} - ${group.id}`);
 
-    assert ( group.displayName == groupName )
+    assert ( group.displayName == sampleGroupName )
 
     const groupProperty = await getOrCreateGroupProperty(requestContext, mapping.id, group.id);
     console.log(`Get or Created group property: ${groupProperty.displayName} - ${groupProperty.id}`);
 
-    assert ( groupProperty.displayName == groupPropertyName );
+    assert ( groupProperty.displayName == sampleGroupProperty.displayName );
 
-    const extractor = await runExtractor(requestContext);
-    console.log(`Run extraction: ${extractor.id}`);
+    const extractionRun = await runExtractor(requestContext);
+    console.log(`Run extraction: ${extractionRun.id}`);
 
-    assert ( extractor.id != undefined)
+    assert ( extractionRun.id != undefined)
 
-    const status = await pingExtractor(requestContext, extractor.id);
-    console.log(`Retrieve extraction status: ${status.state} - ${status.reason}`);
+    const extractionStatus = await waitForExtractionToFinish(requestContext, extractionRun.id);
+    assert ( extractionStatus != undefined && extractionStatus.state != undefined )
 
-    assert ( status != undefined && status.state != undefined )
+    if(extractionStatus.state == "Running") {
+      console.log(`Extraction run out of time. Given timeout: ${config.timeoutMS}ms`)
+    } else {
+      console.log(`Extraction finished with status: ${extractionStatus.state} - ${extractionStatus.reason}`);
+    }
+
+    console.log("Done.")
 
   } catch (error) {
     console.error(`${error.message}\n${error.stack}`);

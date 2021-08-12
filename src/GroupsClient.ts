@@ -48,7 +48,7 @@ export class GroupsClient extends ClientBase<Group, GroupCreateParams, GroupUpda
   }
 
   public async createGroup(requestContext: AuthorizedClientRequestContext, body: GroupCreateParams): Promise<Group> {
-    return this.create(requestContext, () => this.getUrl(), body);
+    return this.post(requestContext, () => this.getUrl(), body);
   }
 
   public async deleteGroup(requestContext: AuthorizedClientRequestContext, groupId: string): Promise<void> {

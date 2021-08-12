@@ -34,7 +34,7 @@ export class ReportMappingsClient extends ClientBase<ReportMapping, ReportMappin
   }
 
   public async createReportMapping(requestContext: AuthorizedClientRequestContext, body: ReportMappingCreateParams): Promise<ReportMapping> {
-    return this.create(requestContext, () => this.getUrl(), body);
+    return this.post(requestContext, () => this.getUrl(), body);
   }
 
   public async deleteReportMapping(requestContext: AuthorizedClientRequestContext, mappingId: string): Promise<void> {

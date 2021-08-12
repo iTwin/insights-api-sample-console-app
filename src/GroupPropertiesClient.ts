@@ -6,7 +6,7 @@
 import { AuthorizedClientRequestContext } from "@bentley/itwin-client";
 import { ClientBase, Links } from "./ClientBase";
 
-export interface Ecproperty {
+export interface ECProperty {
   ecSchemaName: string;
   ecClassName: string;
   ecPropertyName: string;
@@ -18,7 +18,7 @@ export interface GroupProperty {
   displayName: string;
   dataType: string;
   quantityType: string;
-  ecProperties: Ecproperty;
+  ecProperties: ECProperty;
   _links: { report: Links };
 }
 
@@ -26,14 +26,14 @@ export interface GroupPropertyCreateParams {
   displayName: string;
   dataType: string;
   quantityType: string;
-  ecProperties: Ecproperty[];
+  ecProperties: ECProperty[];
 }
 
 export interface GroupPropertyUpdateParams {
   displayName: string;
   dataType: string;
   quantityType: string;
-  ecProperties: Ecproperty[];
+  ecProperties: ECProperty[];
 }
 
 export class GroupPropertiesClient extends ClientBase<GroupProperty, GroupPropertyCreateParams, GroupPropertyUpdateParams> {
@@ -58,7 +58,7 @@ export class GroupPropertiesClient extends ClientBase<GroupProperty, GroupProper
   }
 
   public async createGroupProperty(requestContext: AuthorizedClientRequestContext, body: GroupPropertyCreateParams): Promise<GroupProperty> {
-    return this.create(requestContext, () => this.getUrl(), body);
+    return this.post(requestContext, () => this.getUrl(), body);
   }
 
   public async deleteGroupProperty(requestContext: AuthorizedClientRequestContext, groupPropertyId: string): Promise<void> {

@@ -48,7 +48,7 @@ export class ReportsClient extends ClientBase<Report, ReportCreateParams, Report
   }
 
   public async createReport(requestContext: AuthorizedClientRequestContext, body: ReportCreateParams): Promise<Report> {
-    return this.create(requestContext, () => this.getUrl(), body);
+    return this.post(requestContext, () => this.getUrl(), body);
   }
 
   public async deleteReport(requestContext: AuthorizedClientRequestContext, reportId: string): Promise<void> {
