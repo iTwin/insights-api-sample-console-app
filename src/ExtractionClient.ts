@@ -11,8 +11,15 @@ export interface Run {
 }
 
 export interface Status {
-  state: string;
+  state: ExtractionRunState;
   reason: string;
+}
+
+export enum ExtractionRunState {
+  Pending = 1, // TODO: this state is not added in API docs
+  Running = 2,
+  Failed = 3,
+  Succeeded = 4
 }
 
 export class ExtractionClient extends ClientBase<Status, Run, undefined> {
