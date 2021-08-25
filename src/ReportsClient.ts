@@ -25,37 +25,29 @@ export interface ReportUpdateParams {
   description?: string;
   deleted?: boolean;
 }
+export namespace ReportsClient {
 
-export class ReportsClient extends ClientBase<Report, ReportCreateParams, ReportUpdateParams> {
-  constructor() {
-    super();
+  export function getUrl(): string {
+    return `${ClientBase.getUrlBase()}/reports`;
   }
 
-  protected parseSingleEntityBody(body: any): Report {
-    return body.report;
+  export async function getReports(requestContext: AuthorizedClientRequestContext, contextId: string): Promise<Report[]> {
+    return ClientBase.getAll(requestContext, () => `${getUrl()}?projectId=${contextId}`, "reports");
   }
 
-  public getUrl(): string {
-    return `${this.getUrlBase()}/reports`;
+  export async function getReport(requestContext: AuthorizedClientRequestContext, reportId: string): Promise<Report> {
+    return ClientBase.getSingle(requestContext, () => `${getUrl()}/${reportId}`);
   }
 
-  public async getReports(requestContext: AuthorizedClientRequestContext, contextId: string): Promise<Report[]> {
-    return this.getAll(requestContext, () => `${this.getUrl()}?projectId=${contextId}`, "reports");
+  export async function createReport(requestContext: AuthorizedClientRequestContext, body: ReportCreateParams): Promise<Report> {
+    return ClientBase.post(requestContext, () => getUrl(), body);
   }
 
-  public async getReport(requestContext: AuthorizedClientRequestContext, reportId: string): Promise<Report> {
-    return this.getSingle(requestContext, () => `${this.getUrl()}/${reportId}`);
+  export async function deleteReport(requestContext: AuthorizedClientRequestContext, reportId: string): Promise<void> {
+    return ClientBase.del(requestContext, () => `${getUrl()}/${reportId}`);
   }
 
-  public async createReport(requestContext: AuthorizedClientRequestContext, body: ReportCreateParams): Promise<Report> {
-    return this.post(requestContext, () => this.getUrl(), body);
-  }
-
-  public async deleteReport(requestContext: AuthorizedClientRequestContext, reportId: string): Promise<void> {
-    return this.delete(requestContext, () => `${this.getUrl()}/${reportId}`);
-  }
-
-  public async updateReport(requestContext: AuthorizedClientRequestContext, reportId: string, body: ReportUpdateParams): Promise<Report> {
-    return this.patch(requestContext, () => `${this.getUrl()}/${reportId}`, body);
+  export async function updateReport(requestContext: AuthorizedClientRequestContext, reportId: string, body: ReportUpdateParams): Promise<Report> {
+    return ClientBase.patch(requestContext, () => `${getUrl()}/${reportId}`, body);
   }
 }

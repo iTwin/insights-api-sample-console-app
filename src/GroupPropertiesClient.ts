@@ -36,36 +36,28 @@ export interface GroupPropertyUpdateParams {
   ecProperties: ECProperty[];
 }
 
-export class GroupPropertiesClient extends ClientBase<GroupProperty, GroupPropertyCreateParams, GroupPropertyUpdateParams> {
-  constructor(private iModelId: string, private mappingId: string, private groupId: string) {
-    super();
+export namespace GroupPropertiesClient {
+  export function getUrl(iModelId: string, mappingId: string, groupId: string): string {
+    return `${ClientBase.getUrlBase()}/datasources/iModels/${iModelId}/mappings/${mappingId}/groups/${groupId}/properties`;
   }
 
-  protected parseSingleEntityBody(body: any): GroupProperty {
-    return body.property;
+  export async function getGroupProperties(requestContext: AuthorizedClientRequestContext, iModelId: string, mappingId: string, groupId: string): Promise<GroupProperty[]> {
+    return ClientBase.getAll(requestContext, () => `${getUrl(iModelId, mappingId, groupId)}?`, "properties");
   }
 
-  public getUrl(): string {
-    return `${this.getUrlBase()}/datasources/iModels/${this.iModelId}/mappings/${this.mappingId}/groups/${this.groupId}/properties`;
+  export async function getGroupProperty(requestContext: AuthorizedClientRequestContext, iModelId: string, mappingId: string, groupId: string, groupPropertyId: string): Promise<GroupProperty> {
+    return ClientBase.getSingle(requestContext, () => `${getUrl(iModelId, mappingId, groupId)}/${groupPropertyId}`);
   }
 
-  public async getGroupProperties(requestContext: AuthorizedClientRequestContext): Promise<GroupProperty[]> {
-    return this.getAll(requestContext, () => `${this.getUrl()}?`, "properties");
+  export async function createGroupProperty(requestContext: AuthorizedClientRequestContext, iModelId: string, mappingId: string, groupId: string, body: GroupPropertyCreateParams): Promise<GroupProperty> {
+    return ClientBase.post(requestContext, () => getUrl(iModelId, mappingId, groupId), body);
   }
 
-  public async getGroupProperty(requestContext: AuthorizedClientRequestContext, groupPropertyId: string): Promise<GroupProperty> {
-    return this.getSingle(requestContext, () => `${this.getUrl()}/${groupPropertyId}`);
+  export async function deleteGroupProperty(requestContext: AuthorizedClientRequestContext, iModelId: string, mappingId: string, groupId: string, groupPropertyId: string): Promise<void> {
+    return ClientBase.del(requestContext, () => `${getUrl(iModelId, mappingId, groupId)}/${groupPropertyId}`);
   }
 
-  public async createGroupProperty(requestContext: AuthorizedClientRequestContext, body: GroupPropertyCreateParams): Promise<GroupProperty> {
-    return this.post(requestContext, () => this.getUrl(), body);
-  }
-
-  public async deleteGroupProperty(requestContext: AuthorizedClientRequestContext, groupPropertyId: string): Promise<void> {
-    return this.delete(requestContext, () => `${this.getUrl()}/${groupPropertyId}`);
-  }
-
-  public async updateGroupProperty(requestContext: AuthorizedClientRequestContext, groupPropertyId: string, body: GroupPropertyUpdateParams): Promise<GroupProperty> {
-    return this.put(requestContext, () => `${this.getUrl()}/${groupPropertyId}`, body);
+  export async function updateGroupProperty(requestContext: AuthorizedClientRequestContext, iModelId: string, mappingId: string, groupId: string, groupPropertyId: string, body: GroupPropertyUpdateParams): Promise<GroupProperty> {
+    return ClientBase.put(requestContext, () => `${getUrl(iModelId, mappingId, groupId)}/${groupPropertyId}`, body);
   }
 }

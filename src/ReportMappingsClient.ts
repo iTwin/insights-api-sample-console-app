@@ -16,28 +16,21 @@ export interface ReportMappingCreateParams {
   mappingId: string;
 }
 
-export class ReportMappingsClient extends ClientBase<ReportMapping, ReportMappingCreateParams, undefined> {
-  constructor(private reportId: string) {
-    super();
+export namespace ReportMappingsClient {
+
+  export function getUrl(reportId: string): string {
+    return `${ClientBase.getUrlBase()}/reports/${reportId}/datasources/iModelMappings`;
   }
 
-  protected parseSingleEntityBody(body: any): ReportMapping {
-    return body.mapping;
+  export async function getReportMappings(requestContext: AuthorizedClientRequestContext, reportId: string): Promise<ReportMapping[]> {
+    return ClientBase.getAll(requestContext, () => `${getUrl(reportId)}`, "mappings");
   }
 
-  public getUrl(): string {
-    return `${this.getUrlBase()}/reports/${this.reportId}/datasources/iModelMappings`;
+  export async function  createReportMapping(requestContext: AuthorizedClientRequestContext, reportId: string, body: ReportMappingCreateParams): Promise<ReportMapping> {
+    return ClientBase.post(requestContext, () => getUrl(reportId), body);
   }
 
-  public async getReportMappings(requestContext: AuthorizedClientRequestContext): Promise<ReportMapping[]> {
-    return this.getAll(requestContext, () => `${this.getUrl()}`, "mappings");
-  }
-
-  public async createReportMapping(requestContext: AuthorizedClientRequestContext, body: ReportMappingCreateParams): Promise<ReportMapping> {
-    return this.post(requestContext, () => this.getUrl(), body);
-  }
-
-  public async deleteReportMapping(requestContext: AuthorizedClientRequestContext, mappingId: string): Promise<void> {
-    return this.delete(requestContext, () => `${this.getUrl()}/${mappingId}`);
+  export async function  deleteReportMapping(requestContext: AuthorizedClientRequestContext, reportId: string, mappingId: string): Promise<void> {
+    return ClientBase.del(requestContext, () => `${getUrl(reportId)}/${mappingId}`);
   }
 }

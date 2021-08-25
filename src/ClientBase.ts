@@ -4,6 +4,7 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { AuthorizedClientRequestContext, request, RequestOptions, Response } from "@bentley/itwin-client";
+import { BentleyError, RepositoryStatus } from '@bentley/bentleyjs-core';
 
 export interface Link {
   href: string;
@@ -13,10 +14,27 @@ export interface Links {
   self: Link;
 }
 
-export abstract class ClientBase<TEntity, TCreateParams, TUpdateParams> {
-  protected abstract parseSingleEntityBody(body: any): TEntity;
+export namespace ClientBase {
 
-  private createRequestOptions(requestContext: AuthorizedClientRequestContext, method: string, body?: any): RequestOptions {
+  export function parseSingleEntityBody(body: any): any {
+      if('group' in body) {
+        return body.group;
+      } else if ('mapping' in body) {
+        return body.mapping;
+      } else if ('property' in body) {
+        return body.property;
+      } else if ('report' in body) {
+        return body.report;
+      } else if ('status' in body) {
+        return body.status;
+      } else if ('run' in body) {
+        return body.run;
+      } else {
+        throw new BentleyError(RepositoryStatus.InvalidResponse, "Response body is invalid.");
+      }
+  }
+
+  export function createRequestOptions(requestContext: AuthorizedClientRequestContext, method: string, body?: any): RequestOptions {
     return {
       method,
       headers: {
@@ -26,16 +44,16 @@ export abstract class ClientBase<TEntity, TCreateParams, TUpdateParams> {
     };
   }
 
-  protected getUrlBase(): string {
+  export function getUrlBase(): string {
     return 'https://api.bentley.com/insights';
   }
 
-  protected async getAll(requestContext: AuthorizedClientRequestContext, urlFactory: () => string, resultName: string): Promise<TEntity[]> {
+  export async function getAll(requestContext: AuthorizedClientRequestContext, urlFactory: () => string, resultName: string): Promise<any[]> {
     requestContext.enter();
-    const results: TEntity[] = [];
+    const results: any[] = [];
 
     const urlRoot = urlFactory();
-    const options = this.createRequestOptions(requestContext, "GET");
+    const options = createRequestOptions(requestContext, "GET");
 
     let url = urlRoot;
     do {
@@ -48,52 +66,52 @@ export abstract class ClientBase<TEntity, TCreateParams, TUpdateParams> {
     return results;
   }
 
-  protected async getSingle(requestContext: AuthorizedClientRequestContext, urlFactory: () => string): Promise<TEntity> {
+  export async function getSingle(requestContext: AuthorizedClientRequestContext, urlFactory: () => string): Promise<any> {
     requestContext.enter();
     const url = urlFactory();
-    const options = this.createRequestOptions(requestContext, "GET");
+    const options = createRequestOptions(requestContext, "GET");
 
     const resp: Response = await request(requestContext, url, options);
     requestContext.enter();
-    return this.parseSingleEntityBody(resp.body);
+    return parseSingleEntityBody(resp.body);
   }
 
-  protected async post(requestContext: AuthorizedClientRequestContext, urlFactory: () => string, body: TCreateParams): Promise<TEntity> {
+  export async function post(requestContext: AuthorizedClientRequestContext, urlFactory: () => string, body: any): Promise<any> {
     requestContext.enter();
     const url = urlFactory();
-    const options = this.createRequestOptions(requestContext, "POST", body);
+    const options = createRequestOptions(requestContext, "POST", body);
 
     const resp: Response = await request(requestContext, url, options);
     requestContext.enter();
-    return this.parseSingleEntityBody(resp.body);
+    return parseSingleEntityBody(resp.body);
   }
 
-  protected async patch(requestContext: AuthorizedClientRequestContext, urlFactory: () => string, body: TUpdateParams): Promise<TEntity> {
+  export async function patch(requestContext: AuthorizedClientRequestContext, urlFactory: () => string, body: any): Promise<any> {
     requestContext.enter();
     const url = urlFactory();
-    const options = this.createRequestOptions(requestContext, "PATCH", body);
+    const options = createRequestOptions(requestContext, "PATCH", body);
 
     const resp: Response = await request(requestContext, url, options);
     requestContext.enter();
-    return this.parseSingleEntityBody(resp.body);
+    return parseSingleEntityBody(resp.body);
   }
 
-  protected async delete(requestContext: AuthorizedClientRequestContext, urlFactory: () => string): Promise<void> {
+  export async function del(requestContext: AuthorizedClientRequestContext, urlFactory: () => string): Promise<void> {
     requestContext.enter();
     const url = urlFactory();
-    const options = this.createRequestOptions(requestContext, "DELETE");
+    const options = createRequestOptions(requestContext, "DELETE");
 
     await request(requestContext, url, options);
     requestContext.enter();
   }
 
-  protected async put(requestContext: AuthorizedClientRequestContext, urlFactory: () => string, body: TUpdateParams): Promise<TEntity> {
+  export async function put(requestContext: AuthorizedClientRequestContext, urlFactory: () => string, body: any): Promise<any> {
     requestContext.enter();
     const url = urlFactory();
-    const options = this.createRequestOptions(requestContext, "PUT", body);
+    const options = createRequestOptions(requestContext, "PUT", body);
 
     const resp: Response = await request(requestContext, url, options);
     requestContext.enter();
-    return this.parseSingleEntityBody(resp.body);
+    return parseSingleEntityBody(resp.body);
   }
 }

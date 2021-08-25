@@ -3,9 +3,9 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-import { assert, BentleyError, AuthStatus } from "@bentley/bentleyjs-core";
+import { assert, BentleyError, BentleyStatus } from "@bentley/bentleyjs-core";
 import { ElectronAuthorizationBackend } from "@bentley/electron-manager/lib/ElectronBackend";
-import { IModelHost, NativeHost } from "@bentley/imodeljs-backend";
+import { IModelHost } from "@bentley/imodeljs-backend";
 import { NativeAppAuthorizationConfiguration } from "@bentley/imodeljs-common";
 import { AccessToken, AuthorizedClientRequestContext } from "@bentley/itwin-client";
 import { Group, GroupsClient } from "./GroupsClient";
@@ -28,75 +28,62 @@ async function signIn(issuerUrl: string, clientId: string, redirectUri: string, 
   const client = new ElectronAuthorizationBackend();
   await client.initialize(authConfig);
 
-  return new Promise<AccessToken>((resolve, reject) => {
-    NativeHost.onUserStateChanged.addListener((token) => {
-      if (token) {
-        resolve(token);
-      } else {
-        reject(new BentleyError(AuthStatus.Error, "Failed to sign in"));
-      }
-    });
-    client.signIn().catch((err) => reject(err));
-  });
+  return await client.signInComplete();
 }
 
 async function getOrCreateReport(requestContext: AuthorizedClientRequestContext, projectId: string, reportName: string): Promise<Report> {
-  const reportsClient = new ReportsClient();
-  const reports = await reportsClient.getReports(requestContext, projectId);
+  const reports = await ReportsClient.getReports(requestContext, projectId);
   const report = reports.find((r) => r.displayName === reportName && !r.deleted);
   if (report)
     return report;
-  return reportsClient.createReport(requestContext, { displayName: reportName, projectId: projectId });
+  return ReportsClient.createReport(requestContext, { displayName: reportName, projectId: projectId });
 }
 
 async function getOrCreateMapping(requestContext: AuthorizedClientRequestContext, iModelId: string, mappingName: string): Promise<Mapping> {
-  const mappingsClient = new MappingsClient(iModelId);
-  const mappings = await mappingsClient.getMappings(requestContext);
+  const mappings = await MappingsClient.getMappings(requestContext, iModelId);
   const mapping = mappings.find((m) => m.displayName === mappingName);
   if (mapping)
     return mapping;
-  return mappingsClient.createMapping(requestContext, { displayName: mappingName });
+  return MappingsClient.createMapping(requestContext, iModelId, { displayName: mappingName });
 }
 
 async function getOrCreateReportMapping(requestContext: AuthorizedClientRequestContext, reportId: string, mappingId: string): Promise<ReportMapping> {
-  const reportMappingsClient = new ReportMappingsClient(reportId);
-  const reportMappings = await reportMappingsClient.getReportMappings(requestContext);
+  const reportMappings = await ReportMappingsClient.getReportMappings(requestContext, reportId);
   const reportMapping = reportMappings.find((r) => r.mappingId === mappingId);
   if (reportMapping)
     return reportMapping;
-  return reportMappingsClient.createReportMapping(requestContext, { mappingId });
+  return ReportMappingsClient.createReportMapping(requestContext, reportId, { mappingId });
 }
 
 async function getOrCreateGroup(requestContext: AuthorizedClientRequestContext, iModelId: string, mappingId: string, groupCreateQuery: string, groupName: string): Promise<Group> {
-  const groupsClient = new GroupsClient(iModelId, mappingId);
-  const groups = await groupsClient.getGroups(requestContext);
+  const groups = await GroupsClient.getGroups(requestContext, iModelId, mappingId);
   const group = groups.find((g) => g.displayName === groupName);
   if (group)
     return group;
-  return groupsClient.createGroup(requestContext, { displayName: groupName, query: groupCreateQuery });
+  return GroupsClient.createGroup(requestContext, iModelId, mappingId, { displayName: groupName, query: groupCreateQuery });
 }
 
 async function getOrCreateGroupProperty(requestContext: AuthorizedClientRequestContext, iModelId: string, mappingId: string, groupId: string, groupPropertyParams: GroupPropertyUpdateParams): Promise<GroupProperty> {
-  const groupPropertiesClient = new GroupPropertiesClient(iModelId, mappingId, groupId);
-  const groupProperties = await groupPropertiesClient.getGroupProperties(requestContext);
+  const groupProperties = await GroupPropertiesClient.getGroupProperties(requestContext, iModelId, mappingId, groupId);
   const groupProperty = groupProperties.find((g) => g.displayName === groupPropertyParams.displayName);
   if (groupProperty)
     return groupProperty;
-  return groupPropertiesClient.createGroupProperty(
+  return GroupPropertiesClient.createGroupProperty(
     requestContext,
+    iModelId,
+    mappingId,
+    groupId,
     groupPropertyParams
   );
 }
 
 async function runExtractor(requestContext: AuthorizedClientRequestContext, iModelId: string): Promise<Run> {
-  const extractionClient = new ExtractionClient(iModelId);
-  const extractionRun = await extractionClient.runExtraction(requestContext);
+  const extractionRun = await ExtractionClient.runExtraction(requestContext, iModelId);
   return extractionRun;
 }
 
 async function pingExtractor(requestContext: AuthorizedClientRequestContext, iModelId: string, jobId: string): Promise<Status> {
-  const extractionClient = new ExtractionClient(iModelId);
-  const extractionStatus = await extractionClient.getExtractionStatus(requestContext, jobId);
+  const extractionStatus = await ExtractionClient.getExtractionStatus(requestContext, jobId, iModelId);
   return extractionStatus;
 }
 
@@ -109,7 +96,11 @@ async function waitForExtractionToFinish(requestContext: AuthorizedClientRequest
 
   // Wait for extraction to finish
   try {
-    while(extractionStatus.state != ExtractionRunState.Succeeded && extractionStatus.state != ExtractionRunState.Failed && new Date().getTime() - startTime < timeoutMS) {
+    while(extractionStatus.state == ExtractionRunState.Pending || extractionStatus.state == ExtractionRunState.Running) {
+
+      if(new Date().getTime() - startTime > timeoutMS) {
+        throw new BentleyError(BentleyStatus.ERROR, "Extraction run is timeout.")
+      }
 
       extractionStatus = await pingExtractor(requestContext, iModelId, extractionId);
       console.log(`Retrieve extraction status: ${extractionStatus.state} - ${extractionStatus.reason} after ${new Date().getTime() - startTime} ms.`);

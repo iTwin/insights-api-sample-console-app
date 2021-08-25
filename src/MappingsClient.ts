@@ -23,36 +23,29 @@ export interface MappingUpdateParams {
   description?: string;
 }
 
-export class MappingsClient extends ClientBase<Mapping, MappingCreateParams, MappingUpdateParams> {
-  constructor(private iModelId: string) {
-    super();
+export namespace MappingsClient {
+
+  export function getUrl(iModelId: string): string {
+    return `${ClientBase.getUrlBase()}/datasources/iModels/${iModelId}/mappings`;
   }
 
-  protected parseSingleEntityBody(body: any): Mapping {
-    return body.mapping;
+  export async function getMappings(requestContext: AuthorizedClientRequestContext, iModelId: string): Promise<Mapping[]> {
+    return ClientBase.getAll(requestContext, () => `${getUrl(iModelId)}?`, "mappings");
   }
 
-  public getUrl(): string {
-    return `${this.getUrlBase()}/datasources/iModels/${this.iModelId}/mappings`;
+  export async function getMapping(requestContext: AuthorizedClientRequestContext, iModelId: string, mappingId: string): Promise<Mapping> {
+    return ClientBase.getSingle(requestContext, () => `${getUrl(iModelId)}/${mappingId}`);
   }
 
-  public async getMappings(requestContext: AuthorizedClientRequestContext): Promise<Mapping[]> {
-    return this.getAll(requestContext, () => `${this.getUrl()}?`, "mappings");
+  export async function createMapping(requestContext: AuthorizedClientRequestContext, iModelId: string, body: MappingCreateParams): Promise<Mapping> {
+    return ClientBase.post(requestContext, () => getUrl(iModelId), body);
   }
 
-  public async getMapping(requestContext: AuthorizedClientRequestContext, mappingId: string): Promise<Mapping> {
-    return this.getSingle(requestContext, () => `${this.getUrl()}/${mappingId}`);
+  export async function deleteMapping(requestContext: AuthorizedClientRequestContext, iModelId: string, mappingId: string): Promise<void> {
+    return ClientBase.del(requestContext, () => `${getUrl(iModelId)}/${mappingId}`);
   }
 
-  public async createMapping(requestContext: AuthorizedClientRequestContext, body: MappingCreateParams): Promise<Mapping> {
-    return this.post(requestContext, () => this.getUrl(), body);
-  }
-
-  public async deleteMapping(requestContext: AuthorizedClientRequestContext, mappingId: string): Promise<void> {
-    return this.delete(requestContext, () => `${this.getUrl()}/${mappingId}`);
-  }
-
-  public async updateMapping(requestContext: AuthorizedClientRequestContext, mappingId: string, body: MappingUpdateParams): Promise<Mapping> {
-    return this.patch(requestContext, () => `${this.getUrl()}/${mappingId}`, body);
+  export async function updateMapping(requestContext: AuthorizedClientRequestContext, iModelId: string, mappingId: string, body: MappingUpdateParams): Promise<Mapping> {
+    return ClientBase.patch(requestContext, () => `${getUrl(iModelId)}/${mappingId}`, body);
   }
 }

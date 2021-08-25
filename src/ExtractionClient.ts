@@ -16,34 +16,23 @@ export interface Status {
 }
 
 export enum ExtractionRunState {
-  Pending = 1, // TODO: this state is not added in API docs
-  Running = 2,
-  Failed = 3,
-  Succeeded = 4
+  Pending = "Pending", // TODO: this state is not added in API docs
+  Running = "Running",
+  Failed = "Failed",
+  Succeeded = "Succeeded"
 }
 
-export class ExtractionClient extends ClientBase<Status, Run, undefined> {
-  constructor(private iModelId: string) {
-    super();
+export namespace ExtractionClient {
+
+  export function getUrl(iModelId: string): string {
+    return `${ClientBase.getUrlBase()}/datasources/iModels/${iModelId}/extraction`;
   }
 
-  protected parseSingleEntityBody(body: any): Status {
-    return body.status;
+  export async function getExtractionStatus(requestContext: AuthorizedClientRequestContext, jobId: string, iModelId: string): Promise<Status> {
+    return ClientBase.getSingle(requestContext, () => `${getUrl(iModelId)}/status/${jobId}`);
   }
 
-  protected parseExtractionRunResult(body: any): Run {
-    return body.run;
-  }
-
-  public getUrl(): string {
-    return `${this.getUrlBase()}/datasources/iModels/${this.iModelId}/extraction`;
-  }
-
-  public async getExtractionStatus(requestContext: AuthorizedClientRequestContext, jobId: string): Promise<Status> {
-    return this.getSingle(requestContext, () => `${this.getUrl()}/status/${jobId}`);
-  }
-
-  public async runExtraction(requestContext: AuthorizedClientRequestContext): Promise<Run> {
+  export async function runExtraction(requestContext: AuthorizedClientRequestContext, iModelId: string): Promise<Run> {
     requestContext.enter();
     let options = {
       method: "POST",
@@ -51,8 +40,9 @@ export class ExtractionClient extends ClientBase<Status, Run, undefined> {
         Authorization: requestContext.accessToken.toTokenString(),
       }
     };
-    const resp: Response = await request(requestContext, `${this.getUrl()}/run`, options);
+    const resp: Response = await request(requestContext, `${getUrl(iModelId)}/run`, options);
     requestContext.enter();
-    return this.parseExtractionRunResult(resp.body);
+    return resp.body.run;
   }
 }
+
