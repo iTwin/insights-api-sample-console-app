@@ -9,6 +9,7 @@ using the Reporting & Insights platform APIs.
 ## Table of contents
 
 - [Pre-reqs](#pre-reqs)
+  - [Resources](#resources)
   - [Permissions](#permissions)
   - [Client registration](#client-registration)
 - [Getting started](#getting-started)
@@ -21,6 +22,16 @@ To build and run this app locally you will need a few things:
 - Install [Git](https://git-scm.com/).
 - Install [Node.js](https://nodejs.org/en/) v12 (must be greater than 12.10.x).
 - Install [VS Code](https://code.visualstudio.com/).
+
+### Resources
+
+To successfully run this tool you will need to have an accessible iModel. If you don't
+have one already, contact one of your Organization Administrators for access to an
+iModel or take some time to go through the following tutorials:
+
+- Create a [Project](https://developer.bentley.com/tutorials/create-and-query-projects-guide).
+- Crate an [empty iModel](https://developer.bentley.com/tutorials/create-empty-imodel/).
+- [Populate](https://developer.bentley.com/tutorials/synchronization-tutorial/) the iModel.
 
 ### Permissions
 
