@@ -1,7 +1,11 @@
 {
-  "main": "lib/Main.js",
-  "license": "MIT",
+  "name": "insights-api-sample-console-app",
   "version": "1.0.0",
+  "description": "Node sample application that consumes the Insights API to configure a Report for an iModel.",
+  "main": "lib/Main.js",
+  "author": "Bentley Systems",
+  "keywords": [],
+  "license": "MIT",
   "scripts": {
     "build": "tsc 1>&2 && npm run copy:test-assets",
     "clean": "rimraf lib out",
@@ -9,10 +13,6 @@
     "start": "(npm run build) & node ./lib/main.js",
     "test": "mocha ./lib/tests/*.test.js",
     "copy:test-assets": "cpx \"./src/tests/assets/**/{*,.*}\" ./lib/tests/assets"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://dev.azure.com/bentleycs/iModelTechnologies/_git/insights-and-reporting?path=%2Fsample"
   },
   "dependencies": {
     "@bentley/backend-itwin-client": "^2.17.2",
