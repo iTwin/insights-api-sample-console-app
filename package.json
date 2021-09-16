@@ -4,7 +4,6 @@
   "description": "Node sample application that consumes the Insights API to configure a Report for an iModel.",
   "main": "lib/Main.js",
   "author": "Bentley Systems",
-  "keywords": [],
   "license": "MIT",
   "scripts": {
     "build": "tsc 1>&2 && npm run copy:test-assets",
