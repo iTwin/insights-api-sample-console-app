@@ -45,7 +45,7 @@ export namespace ClientBase {
   }
 
   export function getUrlBase(): string {
-    return 'https://api.bentley.com/insights';
+    return 'https://api.bentley.com/insights/reporting';
   }
 
   export async function getAll(requestContext: AuthorizedClientRequestContext, urlFactory: () => string, resultName: string): Promise<any[]> {
