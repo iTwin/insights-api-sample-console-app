@@ -3,17 +3,17 @@
     "iModelId": "",
     "reportName": "SampleReport",
     "mappingName": "SampleMapping",
-    "groupName": "SampleGroup",
-    "groupCreateQuery": "SELECT * FROM bis.physicalelement",
+    "groupName": "Physical elements",
+    "groupCreateQuery": "SELECT * FROM BisCore.PhysicalElement",
     "groupProperty": {
-        "displayName": "SampleGroupProperty",
-        "dataType": "Number",
+        "displayName": "Code",
+        "dataType": "String",
         "quantityType": "Undefined",
         "ecProperties": [{
-            "ecSchemaName": "BuildingTemplate_NM",
-            "ecClassName": "Concrete__x0020__Beam",
-            "ecPropertyName": "Yaw",
-            "ecPropertyType": "Number"
+            "ecSchemaName": "Generic",
+            "ecClassName": "PhysicalObject",
+            "ecPropertyName": "Category.CodeValue",
+            "ecPropertyType": "String"
           }]
     },
     "authorization": {
