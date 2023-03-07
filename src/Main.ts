@@ -150,9 +150,11 @@ export async function main(): Promise<void> {
     2. Create a mapping
     3. Create a group
     4. Create group properties of some common element attributes that pretty much any iModel would have (properties examples: Yaw, Pitch, Roll etc.)
-    5. Run extractor
-    6. Ping the service to check the extractor status
-    7. Export compiled OData to some local DB (sqlite?) or file system (combining all partitions into a single json) using AccessToken
+    5. Create calculated properties like Length, Area etc.
+    6. Create custom calculation formula properties using existing properties.
+    7. Run extractor
+    8. Ping the service to check the extractor status
+    9. Export compiled OData to some local DB (sqlite?) or file system (combining all partitions into a single json) using AccessToken
    */
     const report = await getOrCreateReport(reportsClient, token, config.projectId, config.reportName);
     console.log(`Get or Created report: ${report.displayName} - ${report.id}`);
