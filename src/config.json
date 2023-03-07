@@ -6,7 +6,7 @@
     "groupName": "SampleGroup",
     "groupCreateQuery": "SELECT * FROM bis.physicalelement",
     "groupProperty": {
-        "displayName": "SampleGroupProperty",
+        "propertyName": "SampleGroupProperty",
         "dataType": "Number",
         "quantityType": "Undefined",
         "ecProperties": [{
