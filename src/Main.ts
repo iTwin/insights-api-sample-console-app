@@ -8,7 +8,7 @@ import { ElectronAuthorizationBackend } from "@bentley/electron-manager/lib/Elec
 import { IModelHost } from "@bentley/imodeljs-backend";
 import { NativeAppAuthorizationConfiguration } from "@bentley/imodeljs-common";
 import { AccessToken } from "@bentley/itwin-client";
-import { ExtractionClient, ExtractionStatus, ExtractorState, Group, GroupProperty, GroupPropertyUpdate, IExtractionClient, IMappingsClient, IReportsClient, Mapping, MappingsClient, Report, ReportMapping, ReportsClient } from "@itwin/insights-client";
+import { CalculatedProperty, CalculatedPropertyCreate, CustomCalculation, CustomCalculationCreate, ExtractionClient, ExtractionStatus, ExtractorState, Group, GroupProperty, GroupPropertyCreate, IExtractionClient, IMappingsClient, IReportsClient, Mapping, MappingsClient, Report, ReportMapping, ReportsClient } from "@itwin/insights-client";
 
 const config = require('./config.json');
 const BASE_URL = "https://api.bentley.com/insights/reporting";
@@ -59,7 +59,7 @@ async function getOrCreateGroup(client: IMappingsClient, accessToken: string, iM
   return client.createGroup(accessToken, iModelId, mappingId, { groupName, query: groupCreateQuery });
 }
 
-async function getOrCreateGroupProperty(client: IMappingsClient, accessToken: string, iModelId: string, mappingId: string, groupId: string, groupPropertyParams: GroupPropertyUpdate): Promise<GroupProperty> {
+async function getOrCreateGroupProperty(client: IMappingsClient, accessToken: string, iModelId: string, mappingId: string, groupId: string, groupPropertyParams: GroupPropertyCreate): Promise<GroupProperty> {
   const groupProperties = await client.getGroupProperties(accessToken, iModelId, mappingId, groupId);
   const groupProperty = groupProperties.find((g) => g.propertyName === groupPropertyParams.propertyName);
   if (groupProperty)
@@ -70,6 +70,34 @@ async function getOrCreateGroupProperty(client: IMappingsClient, accessToken: st
     mappingId,
     groupId,
     groupPropertyParams
+  );
+}
+
+async function getOrCreateCalculatedProperty(client: IMappingsClient, accessToken: string, iModelId: string, mappingId: string, groupId: string, calcPropertyParams: CalculatedPropertyCreate): Promise<CalculatedProperty> {
+  const calcProperties = await client.getCalculatedProperties(accessToken, iModelId, mappingId, groupId);
+  const calcProperty = calcProperties.find((g) => g.propertyName === calcPropertyParams.propertyName);
+  if (calcProperty)
+    return calcProperty;
+  return client.createCalculatedProperty(
+    accessToken,
+    iModelId,
+    mappingId,
+    groupId,
+    calcPropertyParams
+  );
+}
+
+async function getOrCreateCustomCalculation(client: IMappingsClient, accessToken: string, iModelId: string, mappingId: string, groupId: string, formulaCreateParams: CustomCalculationCreate): Promise<CustomCalculation> {
+  const formulas = await client.getCustomCalculations(accessToken, iModelId, mappingId, groupId);
+  const formula = formulas.find((g) => g.propertyName === formulaCreateParams.propertyName);
+  if (formula)
+    return formula;
+  return client.createCustomCalculation(
+    accessToken,
+    iModelId,
+    mappingId,
+    groupId,
+    formulaCreateParams
   );
 }
 
@@ -147,6 +175,16 @@ export async function main(): Promise<void> {
     console.log(`Get or Created group property: ${groupProperty.propertyName} - ${groupProperty.id}`);
 
     assert(groupProperty.propertyName === config.groupProperty.propertyName);
+
+    const calcProperty = await getOrCreateCalculatedProperty(mappingsClient, token, config.iModelId, mapping.id, group.id, config.calculatedProperty);
+    console.log(`Get or Created calculated property: ${calcProperty.propertyName} - ${calcProperty.id}`);
+
+    assert(calcProperty.propertyName === config.calculatedProperty.propertyName);
+
+    const formula = await getOrCreateCustomCalculation(mappingsClient, token, config.iModelId, mapping.id, group.id, config.customCalculation);
+    console.log(`Get or Created formula: ${formula.propertyName} - ${formula.id}`);
+
+    assert(formula.propertyName === config.customCalculation.propertyName);
 
     const extractionRun = await extractionClient.runExtraction(token, config.iModelId);
     console.log(`Run extraction: ${extractionRun.id}`);

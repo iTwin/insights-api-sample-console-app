@@ -16,6 +16,15 @@
             "ecPropertyType": "Number"
           }]
     },
+    "calculatedProperty": {
+        "propertyName": "SampleCalculatedProperty",
+        "type": "Length"
+    },
+    "customCalculation": {
+        "propertyName": "SampleCustomCalculation",
+        "quantityType": "Undefined",
+        "formula": "SampleGroupProperty"
+    },
     "authorization": {
         "clientId": "",
         "issuerUrl": "https://ims.bentley.com",
