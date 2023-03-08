@@ -3,28 +3,23 @@
 * See LICENSE.md in the project root for license terms and full copyright notice.
 *--------------------------------------------------------------------------------------------*/
 
-import { assert, BentleyError, BentleyStatus } from "@bentley/bentleyjs-core";
-import { ElectronAuthorizationBackend } from "@bentley/electron-manager/lib/ElectronBackend";
-import { IModelHost } from "@bentley/imodeljs-backend";
-import { NativeAppAuthorizationConfiguration } from "@bentley/imodeljs-common";
-import { AccessToken } from "@bentley/itwin-client";
+import { AccessToken, assert, BentleyError, BentleyStatus } from "@itwin/core-bentley";
+import { ServiceAuthorizationClient } from "@itwin/service-authorization/lib/cjs/ServiceAuthorizationClient";
+import { ServiceAuthorizationClientConfiguration } from "@itwin/service-authorization/lib/cjs/ServiceAuthorizationClientConfiguration";
+import { IModelHost } from "@itwin/core-backend";
 import { CalculatedProperty, CalculatedPropertyCreate, CustomCalculation, CustomCalculationCreate, ExtractionClient, ExtractionStatus, ExtractorState, Group, GroupProperty, GroupPropertyCreate, IExtractionClient, IMappingsClient, IReportsClient, Mapping, MappingsClient, Report, ReportMapping, ReportsClient } from "@itwin/insights-client";
 
-const config = require('./config.json');
-const BASE_URL = "https://api.bentley.com/insights/reporting";
+const config = require("./config.json");
 
-async function signIn(issuerUrl: string, clientId: string, redirectUri: string, scope: string): Promise<AccessToken> {
-  const authConfig: NativeAppAuthorizationConfiguration = {
-    issuerUrl: issuerUrl,
-    clientId: clientId,
-    redirectUri: redirectUri,
-    scope: scope,
+async function signIn(clientId: string, clientSecret: string, authority: string, scope: string): Promise<AccessToken> {
+  const authConfig: ServiceAuthorizationClientConfiguration = {
+    clientId,
+    clientSecret,
+    authority,
+    scope,
   };
-
-  const client = new ElectronAuthorizationBackend();
-  await client.initialize(authConfig);
-
-  return await client.signInComplete();
+  const authorizationClient = new ServiceAuthorizationClient(authConfig);
+  return authorizationClient.getAccessToken();
 }
 
 async function getOrCreateReport(client: IReportsClient, accessToken: string, projectId: string, reportName: string): Promise<Report> {
@@ -137,63 +132,62 @@ export async function main(): Promise<void> {
   try {
     await IModelHost.startup();
     const authParams = config.authorization;
-    const accessToken: AccessToken = await signIn(authParams.issuerUrl, authParams.clientId, authParams.redirectUri, authParams.scope);
-    const token = accessToken.toTokenString();
+    const accessToken: AccessToken = await signIn(authParams.clientId, authParams.clientSecret, authParams.authority, authParams.scope);
 
-    const reportsClient = new ReportsClient(BASE_URL);
-    const mappingsClient = new MappingsClient(BASE_URL);
-    const extractionClient = new ExtractionClient(BASE_URL);
+    const reportsClient = new ReportsClient();
+    const mappingsClient = new MappingsClient();
+    const extractionClient = new ExtractionClient();
 
     /**
-    Sample steps:
-    1. Create a report
-    2. Create a mapping
-    3. Create a group
-    4. Create group properties of some common element attributes that pretty much any iModel would have (properties examples: Yaw, Pitch, Roll etc.)
-    5. Create calculated properties like Length, Area etc.
-    6. Create custom calculation formula properties using existing properties.
-    7. Run extractor
-    8. Ping the service to check the extractor status
-    9. Export compiled OData to some local DB (sqlite?) or file system (combining all partitions into a single json) using AccessToken
-   */
-    const report = await getOrCreateReport(reportsClient, token, config.projectId, config.reportName);
+      Sample steps:
+      1. Create a report
+      2. Create a mapping
+      3. Create a group
+      4. Create group properties of some common element attributes that pretty much any iModel would have (properties examples: Yaw, Pitch, Roll etc.)
+      5. Create calculated properties like Length, Area etc.
+      6. Create custom calculation formula properties using existing properties.
+      7. Run extractor
+      8. Ping the service to check the extractor status
+      9. Export compiled OData to some local DB (sqlite?) or file system (combining all partitions into a single json) using AccessToken
+     */
+    const report = await getOrCreateReport(reportsClient, accessToken, config.projectId, config.reportName);
     console.log(`Get or Created report: ${report.displayName} - ${report.id}`);
 
-    const mapping = await getOrCreateMapping(mappingsClient, token, config.iModelId, config.mappingName);
+    const mapping = await getOrCreateMapping(mappingsClient, accessToken, config.iModelId, config.mappingName);
     console.log(`Get or Created mapping: ${mapping.mappingName} - ${mapping.id}`);
 
-    const reportMapping = await getOrCreateReportMapping(reportsClient, token, report.id, config.iModelId, mapping.id);
+    const reportMapping = await getOrCreateReportMapping(reportsClient, accessToken, report.id, config.iModelId, mapping.id);
     console.log(`Get or Created report mapping: report: ${reportMapping.reportId} & mapping: ${reportMapping.mappingId}`);
 
     assert(reportMapping.mappingId === mapping.id);
     assert(reportMapping.reportId === report.id);
 
-    const group = await getOrCreateGroup(mappingsClient, token, config.iModelId, mapping.id, config.groupCreateQuery, config.groupName);
+    const group = await getOrCreateGroup(mappingsClient, accessToken, config.iModelId, mapping.id, config.groupCreateQuery, config.groupName);
     console.log(`Get or Created group: ${group.groupName} - ${group.id}`);
 
     assert(group.groupName === config.groupName);
 
-    const groupProperty = await getOrCreateGroupProperty(mappingsClient, token, config.iModelId, mapping.id, group.id, config.groupProperty);
+    const groupProperty = await getOrCreateGroupProperty(mappingsClient, accessToken, config.iModelId, mapping.id, group.id, config.groupProperty);
     console.log(`Get or Created group property: ${groupProperty.propertyName} - ${groupProperty.id}`);
 
     assert(groupProperty.propertyName === config.groupProperty.propertyName);
 
-    const calcProperty = await getOrCreateCalculatedProperty(mappingsClient, token, config.iModelId, mapping.id, group.id, config.calculatedProperty);
+    const calcProperty = await getOrCreateCalculatedProperty(mappingsClient, accessToken, config.iModelId, mapping.id, group.id, config.calculatedProperty);
     console.log(`Get or Created calculated property: ${calcProperty.propertyName} - ${calcProperty.id}`);
 
     assert(calcProperty.propertyName === config.calculatedProperty.propertyName);
 
-    const formula = await getOrCreateCustomCalculation(mappingsClient, token, config.iModelId, mapping.id, group.id, config.customCalculation);
+    const formula = await getOrCreateCustomCalculation(mappingsClient, accessToken, config.iModelId, mapping.id, group.id, config.customCalculation);
     console.log(`Get or Created formula: ${formula.propertyName} - ${formula.id}`);
 
     assert(formula.propertyName === config.customCalculation.propertyName);
 
-    const extractionRun = await extractionClient.runExtraction(token, config.iModelId);
+    const extractionRun = await extractionClient.runExtraction(accessToken, config.iModelId);
     console.log(`Run extraction: ${extractionRun.id}`);
 
     assert(extractionRun.id !== undefined);
 
-    const extractionStatus = await waitForExtractionToFinish(extractionClient, token, extractionRun.id, config.timeoutMS);
+    const extractionStatus = await waitForExtractionToFinish(extractionClient, accessToken, extractionRun.id, config.timeoutMS);
     assert(extractionStatus !== undefined && extractionStatus.state !== undefined);
 
     if (extractionStatus.state === ExtractorState.Running) {
