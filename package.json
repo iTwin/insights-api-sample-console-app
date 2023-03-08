@@ -6,7 +6,7 @@
   "author": "Bentley Systems",
   "license": "MIT",
   "scripts": {
-    "build": "tsc 1>&2 && npm run copy:test-assets",
+    "build": "tsc 1>&2",
     "clean": "rimraf lib out",
     "lint": "eslint -f visualstudio \"./src/**/*.ts\" 1>&2",
     "start": "(npm run build) & node ./lib/main.js"
