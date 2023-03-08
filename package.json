@@ -9,9 +9,7 @@
     "build": "tsc 1>&2 && npm run copy:test-assets",
     "clean": "rimraf lib out",
     "lint": "eslint -f visualstudio \"./src/**/*.ts\" 1>&2",
-    "start": "(npm run build) & node ./lib/main.js",
-    "test": "mocha ./lib/tests/*.test.js",
-    "copy:test-assets": "cpx \"./src/tests/assets/**/{*,.*}\" ./lib/tests/assets"
+    "start": "(npm run build) & node ./lib/main.js"
   },
   "dependencies": {
     "@itwin/insights-client": "0.4.0",
@@ -36,10 +34,5 @@
       "dot-notation": "off",
       "no-console": "off"
     }
-  },
-  "mocha": {
-    "timeout": 60000,
-    "exit": true,
-    "check-leaks": true
   }
 }
