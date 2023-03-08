@@ -17,20 +17,13 @@
     "@itwin/insights-client": "0.4.0",
     "@itwin/core-bentley": "^3.6.1",
     "@itwin/core-backend": "^3.6.1",
-    "@itwin/node-cli-authorization": "^0.10.0",
-    "electron": "^23.1.2"
+    "@itwin/node-cli-authorization": "^0.10.0"
   },
   "devDependencies": {
-    "@bentley/build-tools": "2.19.51",
-    "@bentley/eslint-plugin": "2.19.51",
-    "@types/chai": "^4.1.4",
-    "@types/mocha": "^8.2.2",
-    "@types/sinon": "^10.0.2",
-    "chai": "^4.1.2",
+    "@itwin/build-tools": "3.6.1",
+    "@itwin/eslint-plugin": "3.6.1",
     "eslint": "^7.11.0",
-    "mocha": "^8.3.2",
     "rimraf": "^3.0.2",
-    "sinon": "^11.1.1",
     "typescript": "~4.3.0"
   },
   "eslintConfig": {
