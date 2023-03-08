@@ -27,8 +27,8 @@
     },
     "authorization": {
         "clientId": "",
-        "clientSecret": "",
-        "authority": "https://ims.bentley.com",
+        "issuerUrl": "https://ims.bentley.com",
+        "redirectUri": "http://localhost:3000/signin-callback",
         "scope": "insights:read insights:modify"
     },
     "timeoutMS": 600000

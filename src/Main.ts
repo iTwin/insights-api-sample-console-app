@@ -4,22 +4,22 @@
 *--------------------------------------------------------------------------------------------*/
 
 import { AccessToken, assert, BentleyError, BentleyStatus } from "@itwin/core-bentley";
-import { ServiceAuthorizationClient } from "@itwin/service-authorization/lib/cjs/ServiceAuthorizationClient";
-import { ServiceAuthorizationClientConfiguration } from "@itwin/service-authorization/lib/cjs/ServiceAuthorizationClientConfiguration";
 import { IModelHost } from "@itwin/core-backend";
+import { NodeCliAuthorizationClient, NodeCliAuthorizationConfiguration } from "@itwin/node-cli-authorization/lib/cjs/Client";
 import { CalculatedProperty, CalculatedPropertyCreate, CustomCalculation, CustomCalculationCreate, ExtractionClient, ExtractionStatus, ExtractorState, Group, GroupProperty, GroupPropertyCreate, IExtractionClient, IMappingsClient, IReportsClient, Mapping, MappingsClient, Report, ReportMapping, ReportsClient } from "@itwin/insights-client";
 
 const config = require("./config.json");
 
-async function signIn(clientId: string, clientSecret: string, authority: string, scope: string): Promise<AccessToken> {
-  const authConfig: ServiceAuthorizationClientConfiguration = {
+async function signIn(clientId: string, issuerUrl: string, redirectUri: string, scope: string): Promise<AccessToken> {
+  const authConfig: NodeCliAuthorizationConfiguration = {
     clientId,
-    clientSecret,
-    authority,
+    issuerUrl,
+    redirectUri,
     scope,
   };
-  const authorizationClient = new ServiceAuthorizationClient(authConfig);
-  return authorizationClient.getAccessToken();
+  const authClient = new NodeCliAuthorizationClient(authConfig);
+  await authClient.signIn();
+  return authClient.getAccessToken();
 }
 
 async function getOrCreateReport(client: IReportsClient, accessToken: string, projectId: string, reportName: string): Promise<Report> {
