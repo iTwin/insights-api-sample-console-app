@@ -63,7 +63,7 @@ If you don't have one already, follow these steps to create an application.
 9.  Leave post logout redirect URIs empty.
 10. Click the Save button.
 
-You will receive a client id and client secret for the app. Put it in the [config file](src/config.json)
+You will receive a client id for the app. Put it in the [config file](src/config.json)
 with issuerUrl, redirectUrl and scope (make sure you selected `insights:read` and
 `insights:modify` scopes while creating the app).
 
