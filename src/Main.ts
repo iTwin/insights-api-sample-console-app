@@ -6,9 +6,9 @@
 import { AccessToken, assert, BentleyError, BentleyStatus } from "@itwin/core-bentley";
 import { IModelHost } from "@itwin/core-backend";
 import { NodeCliAuthorizationClient, NodeCliAuthorizationConfiguration } from "@itwin/node-cli-authorization/lib/cjs/Client";
-import { CalculatedProperty, CalculatedPropertyCreate, CustomCalculation, CustomCalculationCreate, ExtractionClient, ExtractionStatus, ExtractorState, Group, GroupProperty, GroupPropertyCreate, IExtractionClient, IMappingsClient, IReportsClient, Mapping, MappingsClient, Report, ReportMapping, ReportsClient } from "@itwin/insights-client";
+import { CalculatedProperty, CalculatedPropertyCreate, CalculatedPropertyType, CustomCalculation, CustomCalculationCreate, DataType, ExtractionClient, ExtractionStatus, ExtractorState, Group, GroupProperty, GroupPropertyCreate, IExtractionClient, IMappingsClient, IReportsClient, Mapping, MappingsClient, QuantityType, Report, ReportMapping, ReportsClient } from "@itwin/insights-client";
 
-const config = require("./config.json");
+import config = require("./config.json");
 
 async function signIn(clientId: string, issuerUrl: string, redirectUri: string, scope: string): Promise<AccessToken> {
   const authConfig: NodeCliAuthorizationConfiguration = {
@@ -132,7 +132,7 @@ export async function main(): Promise<void> {
   try {
     await IModelHost.startup();
     const authParams = config.authorization;
-    const accessToken: AccessToken = await signIn(authParams.clientId, authParams.clientSecret, authParams.authority, authParams.scope);
+    const accessToken: AccessToken = await signIn(authParams.clientId, authParams.issuerUrl, authParams.redirectUri, authParams.scope);
 
     const reportsClient = new ReportsClient();
     const mappingsClient = new MappingsClient();
@@ -167,20 +167,42 @@ export async function main(): Promise<void> {
 
     assert(group.groupName === config.groupName);
 
-    const groupProperty = await getOrCreateGroupProperty(mappingsClient, accessToken, config.iModelId, mapping.id, group.id, config.groupProperty);
+    const groupPropertyCreate: GroupPropertyCreate = {
+      propertyName: config.groupProperty.propertyName ?? "SampleGroupProperty",
+      dataType: config.groupProperty.dataType as DataType ?? DataType.Undefined,
+      quantityType: config.groupProperty.quantityType as QuantityType ?? QuantityType.Undefined,
+      ecProperties: config.groupProperty.ecProperties.map((p) => {
+        return {
+          ecSchemaName: p.ecSchemaName ?? "",
+          ecClassName: p.ecClassName ?? "",
+          ecPropertyName: p.ecPropertyName ?? "",
+          ecPropertyType: p.ecPropertyType as DataType ?? DataType.Undefined,
+        };
+      }),
+    };
+    const groupProperty = await getOrCreateGroupProperty(mappingsClient, accessToken, config.iModelId, mapping.id, group.id, groupPropertyCreate);
     console.log(`Get or Created group property: ${groupProperty.propertyName} - ${groupProperty.id}`);
 
-    assert(groupProperty.propertyName === config.groupProperty.propertyName);
+    assert(groupProperty.propertyName === groupPropertyCreate.propertyName);
 
-    const calcProperty = await getOrCreateCalculatedProperty(mappingsClient, accessToken, config.iModelId, mapping.id, group.id, config.calculatedProperty);
+    const calcPropertyCreate: CalculatedPropertyCreate = {
+      propertyName: config.calculatedProperty.propertyName ?? "SampleCalculatedProperty",
+      type: config.calculatedProperty.type as CalculatedPropertyType ?? CalculatedPropertyType.Undefined,
+    };
+    const calcProperty = await getOrCreateCalculatedProperty(mappingsClient, accessToken, config.iModelId, mapping.id, group.id, calcPropertyCreate);
     console.log(`Get or Created calculated property: ${calcProperty.propertyName} - ${calcProperty.id}`);
 
-    assert(calcProperty.propertyName === config.calculatedProperty.propertyName);
+    assert(calcProperty.propertyName === calcPropertyCreate.propertyName);
 
-    const formula = await getOrCreateCustomCalculation(mappingsClient, accessToken, config.iModelId, mapping.id, group.id, config.customCalculation);
+    const formulaCreate: CustomCalculationCreate = {
+      propertyName: config.customCalculation.propertyName ?? "SampleCustomCalculation",
+      quantityType: config.customCalculation.quantityType as QuantityType ?? QuantityType.Undefined,
+      formula: config.customCalculation.formula ?? "",
+    };
+    const formula = await getOrCreateCustomCalculation(mappingsClient, accessToken, config.iModelId, mapping.id, group.id, formulaCreate);
     console.log(`Get or Created formula: ${formula.propertyName} - ${formula.id}`);
 
-    assert(formula.propertyName === config.customCalculation.propertyName);
+    assert(formula.propertyName === formulaCreate.propertyName);
 
     const extractionRun = await extractionClient.runExtraction(accessToken, config.iModelId);
     console.log(`Run extraction: ${extractionRun.id}`);
