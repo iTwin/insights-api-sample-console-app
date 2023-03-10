@@ -57,7 +57,7 @@ If you don't have one already, follow these steps to create an application.
 4.  Click the 'Register New' button.
 5.  Give your application a Name.
 6.  Select the Reporting & Insights API association.
-7.  Select application type SPA (Single Page Web Application).
+7.  Select application type Desktop/Mobile.
 8.  Enter Redirect URL.
     For this tutorial use http://localhost:3000/signin-callback.
 9.  Leave post logout redirect URIs empty.

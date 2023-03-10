@@ -6,7 +6,7 @@
     "groupName": "SampleGroup",
     "groupCreateQuery": "SELECT * FROM bis.physicalelement",
     "groupProperty": {
-        "displayName": "SampleGroupProperty",
+        "propertyName": "SampleGroupProperty",
         "dataType": "Number",
         "quantityType": "Undefined",
         "ecProperties": [{
@@ -16,11 +16,20 @@
             "ecPropertyType": "Number"
           }]
     },
+    "calculatedProperty": {
+        "propertyName": "SampleCalculatedProperty",
+        "type": "Length"
+    },
+    "customCalculation": {
+        "propertyName": "SampleCustomCalculation",
+        "quantityType": "Undefined",
+        "formula": "SampleGroupProperty"
+    },
     "authorization": {
         "clientId": "",
         "issuerUrl": "https://ims.bentley.com",
         "redirectUri": "http://localhost:3000/signin-callback",
-        "scope": "openid insights:read insights:modify"
+        "scope": "insights:read insights:modify"
     },
     "timeoutMS": 600000
 }
