@@ -30,7 +30,7 @@ have one already, contact one of your Organization Administrators for access to 
 iModel or take some time to go through the following tutorials:
 
 - Create a [Project](https://developer.bentley.com/tutorials/create-and-query-projects-guide).
-- Crate an [empty iModel](https://developer.bentley.com/tutorials/create-empty-imodel/).
+- Create an [empty iModel](https://developer.bentley.com/tutorials/create-empty-imodel/).
 - [Populate](https://developer.bentley.com/tutorials/synchronization-tutorial/) the iModel.
 
 ### Permissions
